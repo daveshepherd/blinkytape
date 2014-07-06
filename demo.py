@@ -1,7 +1,6 @@
 from BlinkyTape import BlinkyTape
 from time import sleep
 
-
 bb = BlinkyTape('/dev/ttyACM0') #least on Mac OS X, this is the port to use!
 
 SHORT_WAIT = 0.05
@@ -51,5 +50,3 @@ def ambulance():
 
 while True:
 	ambulance()
-
-#		knightrider()
