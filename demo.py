@@ -1,34 +1,8 @@
 from BlinkyTape import BlinkyTape
-import urllib2
-import re
 from time import sleep
-import random
-import math
 
 
 bb = BlinkyTape('/dev/ttyACM0') #least on Mac OS X, this is the port to use!
-
-def knightrider():
-	for x in range(75):
-		for y in range(60):
-			r = int(math.sin(0.1 * x + -15) * 127 + 128)
-			z = [y+i for i in range(15)]
-			if x == x in z:
-				bb.sendPixel(r,0,0)
-			else:
-				bb.sendPixel(0,0,0)
-		sleep(0.1)
-		bb.show()
-	for x in reversed(range(75)):
-		for y in range(60):
-			r = int(math.sin(0.1 * x + -15) * 127 + 128)
-			z = [y+i for i in range(15)]
-			if x == x in z:
-				bb.sendPixel(r,0,0)
-			else:
-				bb.sendPixel(0,0,0)
-		sleep(0.1)
-		bb.show()
 
 shortBreak = 0.05
 longBreak = 0.5
