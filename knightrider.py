@@ -8,79 +8,37 @@ import math
 
 bb = BlinkyTape('/dev/ttyACM0') #least on Mac OS X, this is the port to use!
 
-def knightrider():
-	for x in range(75):
-		for y in range(60):
-			if x == y:
-				bb.sendPixel(255,0,0)
-			elif x-1 == y:
-				bb.sendPixel(238,0,0)
-			elif x-2 == y:
-				bb.sendPixel(221,0,0)
-			elif x-3 == y:
-				bb.sendPixel(204,0,0)
-			elif x-4 == y:
-				bb.sendPixel(187,0,0)
-			elif x-5 == y:
-				bb.sendPixel(170,0,0)
-			elif x-6 == y:
-				bb.sendPixel(153,0,0)
-			elif x-7 == y:
-				bb.sendPixel(136,0,0)
-			elif x-8 == y:
-				bb.sendPixel(119,0,0)
-			elif x-9 == y:
-				bb.sendPixel(102,0,0)
-			elif x-10 == y:
-				bb.sendPixel(85,0,0)
-			elif x-11 == y:
-				bb.sendPixel(68,0,0)
-			elif x-12 == y:
-				bb.sendPixel(51,0,0)
-			elif x-13 == y:
-				bb.sendPixel(34,0,0)
-			elif x-14 == y:
-				bb.sendPixel(17,0,0)
-			else:
-				bb.sendPixel(0,0,0)
-		sleep(0.005)
-		bb.show()
-	for x in reversed(range(75)):
-		for y in range(15, 75):
-			if x == y:
-				bb.sendPixel(255,0,0)
-			elif x+1 == y:
-				bb.sendPixel(238,0,0)
-			elif x+2 == y:
-				bb.sendPixel(221,0,0)
-			elif x+3 == y:
-				bb.sendPixel(204,0,0)
-			elif x+4 == y:
-				bb.sendPixel(187,0,0)
-			elif x+5 == y:
-				bb.sendPixel(170,0,0)
-			elif x+6 == y:
-				bb.sendPixel(153,0,0)
-			elif x+7 == y:
-				bb.sendPixel(136,0,0)
-			elif x+8 == y:
-				bb.sendPixel(119,0,0)
-			elif x+9 == y:
-				bb.sendPixel(102,0,0)
-			elif x+10 == y:
-				bb.sendPixel(85,0,0)
-			elif x+11 == y:
-				bb.sendPixel(68,0,0)
-			elif x+12 == y:
-				bb.sendPixel(51,0,0)
-			elif x+13 == y:
-				bb.sendPixel(34,0,0)
-			elif x+14 == y:
-				bb.sendPixel(17,0,0)
-			else:
-				bb.sendPixel(0,0,0)
-		sleep(0.005)
-		bb.show()
+OFF_COLOUR = [0,0,0]
+RED = [254,0,0]
+DISPLAY_LENGTH = 30
+UPDATE_INTERVAL = 0.02
 
+pixels=[OFF_COLOUR for i in range(DISPLAY_LENGTH)]
+
+def fadePixel(pixel):
+	if pixel[0] != 0:
+		pixel[0] = pixel[0] - 17
+		if pixel[0] < 0:
+			pixel[0] = 0
+
+
+def fadePixels():
+	for x in range(len(pixels)):
+		fadePixel(pixels[x])
+
+def knightrider():
+	for i in range(DISPLAY_LENGTH):
+		fadePixels()
+		pixels[i] = list(RED)
+		bb.send_list(pixels)
+		sleep(UPDATE_INTERVAL)
+	for i in reversed(range(DISPLAY_LENGTH)):
+		fadePixels()
+		pixels[i] = list(RED)
+		bb.send_list(pixels)
+		sleep(UPDATE_INTERVAL)
+
+
+bb.displayColor(0,0,0)
 while True:
 	knightrider()
