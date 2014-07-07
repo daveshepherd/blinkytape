@@ -10,7 +10,7 @@ COLOUR_GREEN = [0,254,0]
 COLOUR_BLUE = [0,0,254]
 COLOUR_ORANGE = [254,100,0]
 COLOUR_WHITE = [254,254,254]
-ACTIVE_COLOUR = COLOUR_ORANGE
+ACTIVE_COLOUR = COLOUR_BLUE
 pixels=[COLOUR_OFF for i in range(60)]
 
 def setColour(colour1, colour2, colour3, colour4, colour5, colour6):
