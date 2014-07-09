@@ -4,7 +4,7 @@ import time
 from BlinkyTape import BlinkyTape
 
 bb = BlinkyTape('/dev/ttyACM0') #least on Mac OS X, this is the port to use!
-RGB_OFFSET = 17
+RGB_OFFSET = 25
 
 def getTemperature():
 	r = requests.get("http://datapoint.metoffice.gov.uk/public/data/val/wxobs/all/json/3544?res=hourly&key=35d53d57-9aa0-45de-9772-0871f0ceffda")
@@ -27,25 +27,25 @@ def increasingColourOffset(offset):
 def decreasingColourOffset(offset):
 		return 255 - increasingColourOffset(offset)
 
-
+#20 10 0 10 20 30 40
 def convertTemperatureToRgb(temperature):
 	if (temperature <= -20):
 		return [0,0,255]
-	elif (temperature <= -5):
+	elif (temperature <= -10):
 		# -20 < t <= -5
 		g = increasingColourOffset(temperature + 20)
 		return [0,g,255]
-	elif (temperature <= 10):
+	elif (temperature <= 0):
 		# -5 < t <= 10
-		b = decreasingColourOffset(temperature + 5)
+		b = decreasingColourOffset(temperature + 10)
 		return [0,255,b]
-	elif (temperature <= 25):
+	elif (temperature <= 10):
 		# 10 < t <= 25
-		r = increasingColourOffset(temperature - 10)
+		r = increasingColourOffset(temperature )
 		return [r,255,0]
-	elif (temperature <= 40):
+	elif (temperature <= 20):
 		# 25 < t <= 40
-		g = decreasingColourOffset(temperature - 25)
+		g = decreasingColourOffset(temperature - 10)
 		return [255,g,0]
 	else:
 		# 40 < t
@@ -69,4 +69,4 @@ while True:
 		bb.sendPixel(0,0,0)
 
 	bb.show()
-	time.sleep(300)
+	time.sleep(1800)
