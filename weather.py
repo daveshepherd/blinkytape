@@ -7,19 +7,23 @@ bb = BlinkyTape('/dev/ttyACM0') #least on Mac OS X, this is the port to use!
 RGB_OFFSET = 25
 
 def getTemperature():
-	r = requests.get("http://datapoint.metoffice.gov.uk/public/data/val/wxobs/all/json/3544?res=hourly&key=35d53d57-9aa0-45de-9772-0871f0ceffda")
-	data = json.loads(r.text)
+	try:
+		r = requests.get("http://datapoint.metoffice.gov.uk/public/data/val/wxobs/all/json/3544?res=hourly&key=35d53d57-9aa0-45de-9772-0871f0ceffda")
+		data = json.loads(r.text)
+		print data
 
-	periods = data['SiteRep']['DV']['Location']['Period']
-	latestPeriod = periods[len(periods) - 1]
+		periods = data['SiteRep']['DV']['Location']['Period']
+		latestPeriod = periods[len(periods) - 1]
 
-	lastSampleDate = latestPeriod['value']
-	reports = latestPeriod['Rep']
-	lastSampleHour = len(reports) - 1
-	currentTemperature = reports[lastSampleHour]['T']
-	print "%s %s:00 UTC %s C" % (lastSampleDate, lastSampleHour, currentTemperature)
+		lastSampleDate = latestPeriod['value']
+		reports = latestPeriod['Rep']
+		lastSampleHour = len(reports) - 1
+		currentTemperature = reports[lastSampleHour]['T']
+		print "%s %s:00 UTC %s C" % (lastSampleDate, lastSampleHour, currentTemperature)
 
-	return int(float(currentTemperature))
+		return int(float(currentTemperature))
+	except:
+		print "Unexpected error:", sys.exc_info()[0]
 
 def increasingColourOffset(offset):
 		return offset * RGB_OFFSET
