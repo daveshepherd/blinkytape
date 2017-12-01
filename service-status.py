@@ -96,6 +96,7 @@ def display():
 
             logging.info('Populate leds list')
             x = 0
+            leds = []
             for i in range(red_leds):
                 leds.append([255,0,0])
                 x = x + 1
