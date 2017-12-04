@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 
-logging.basicConfig(level=logging.INFO,format='%(asctime)s (%(threadName)-10s) %(levelname)-8s %(message)s',)
+logging.basicConfig(level=logging.INFO,format='(%(threadName)-10s) %(levelname)-8s %(message)s',)
 
 FAILURE = 1
 SUCCESS = 2
