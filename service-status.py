@@ -1,34 +1,34 @@
 from __future__ import division
-import traceback
+from BlinkyTape import BlinkyTape
 import time
+import logging
 import math
 import random
-from BlinkyTape import BlinkyTape
 import requests
-import logging
 import threading
-import Queue
-
-q = Queue.Queue()
+import time
+import traceback
 
 logging.basicConfig(level=logging.INFO,format='(%(threadName)-10s) %(message)s',)
 
-RED = 1
-GREEN = 2
+FAILURE = 1
+SUCCESS = 2
+
+c = threading.Condition()
+red_led_count = 0
 
 def queryService(url):
     r = requests.get(url, allow_redirects=False)
     if r.status_code == 200:
-        logging.warn('.')
-        return GREEN
+        return SUCCESS
     else:
         logging.warn('Retrying: %s - %s', url, r.status_code)
         r = requests.get(url, allow_redirects=False)
         if r.status_code == 200:
-            return GREEN
+            return SUCCESS
         else:
             logging.error('%s - %s', url, r.status_code)
-            return RED
+            return FAILURE
 
 def getUrlsForService(service):
     urls = []
@@ -63,53 +63,59 @@ def getStatus():
 
     return responses
 
+def calculateRedLeds(statuses):
+    failureCount = statuses.count(FAILURE)
+    successCount = statuses.count(SUCCESS)
+    red_ratio = failureCount/(failureCount + successCount)
+    red_leds = int(math.ceil(red_ratio * 60))
+    return red_leds
+
+def getLedColourList(red_led_count):
+    x = 0
+    leds = []
+    for i in range(red_led_count):
+        leds.append([255,0,0])
+        x = x + 1
+    for i in range(x,60):
+        leds.append([0,random.randint(20,255),0])
+    return leds
+
+
 def worker():
+    global red_led_count
     logging.info('Starting thread')
     while True:
         logging.info('Starting to query services')
         try:
-            q.put(getStatus())
+            statuses = getStatus()
+            c.acquire()
+            red_led_count = calculateRedLeds(statuses)
+            logging.info('Number of red lights: %s', red_led_count)
+            c.notify_all()
+            c.release()
         except:
             traceback.print_exc()
         logging.info('Finished querying services')
-        time.sleep(30)
 
 def display():
-    logging.info('Starting thread')
+    global red_led_count
+    current_red_led_count=0
+
     bb = BlinkyTape('/dev/ttyACM0')
-    leds = []
-    red_leds = 0
+
+    logging.info('Starting thread')
     while True:
-        try:
-            logging.info('Updating display')
-            if not q.empty():
-                status = q.get()
-                red_count = status.count(RED)
-                green_count = status.count(GREEN)
-
-                red_ratio = red_count/(red_count + green_count)
-                red_leds = int(math.ceil(red_ratio * 60))
-                logging.info('Status has been updated, number of red lights: %s', red_leds)
-
-            else:
-                logging.info('Status has not been updated')
-
-            logging.info('Populate leds list')
-            x = 0
-            leds = []
-            for i in range(red_leds):
-                leds.append([255,0,0])
-                x = x + 1
-            for i in range(x,60):
-                leds.append([0,random.randint(20,255),0])
-
-            for i in range(0,60):
-                random.shuffle(leds)
-                bb.send_list(leds)
-                time.sleep(0.5)
-
-        except:
-            traceback.print_exc()
+        c.acquire()
+        if (current_red_led_count != red_led_count):
+            current_red_led_count = red_led_count
+            logging.info('Change to number of red lights: %s', current_red_led_count)
+        c.notify_all()
+        c.release()
+        # do stuff
+        leds = getLedColourList(current_red_led_count)
+        random.shuffle(leds)
+        bb.send_list(leds)
+        time.sleep(0.5)
 
 w = threading.Thread(name='worker', target=worker)
 d = threading.Thread(name='display', target=display)
