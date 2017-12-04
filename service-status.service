@@ -1,0 +1,12 @@
+[Unit]
+Description=Service status monitor
+After=multi-user.target
+ 
+[Service]
+Type=simple
+ExecStart=/usr/bin/python /home/pi/blinkytape/service-status.py
+Restart=on-abort
+User=pi
+ 
+[Install]
+WantedBy=multi-user.target
