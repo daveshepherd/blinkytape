@@ -78,8 +78,8 @@ def getLedColourList(red_led_count):
         x = x + 1
     for i in range(x,60):
         leds.append([0,random.randint(20,255),0])
+    random.shuffle(leds)
     return leds
-
 
 def worker():
     global red_led_count
@@ -113,7 +113,6 @@ def display():
         c.release()
         # do stuff
         leds = getLedColourList(current_red_led_count)
-        random.shuffle(leds)
         bb.send_list(leds)
         time.sleep(0.5)
 
