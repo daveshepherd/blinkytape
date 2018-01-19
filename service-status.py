@@ -77,7 +77,7 @@ def getLedColourList(red_led_count):
         leds.append([255,0,0])
         x = x + 1
     for i in range(x,60):
-        leds.append([0,random.randint(20,255),0])
+        leds.append([0,0,0])
     random.shuffle(leds)
     return leds
 
