@@ -78,7 +78,6 @@ def getLedColourList(red_led_count):
         x = x + 1
     for i in range(x,60):
         leds.append([0,0,0])
-    random.shuffle(leds)
     return leds
 
 def worker():
@@ -100,21 +99,37 @@ def worker():
 def display():
     global red_led_count
     current_red_led_count=0
+    leds = getLedColourList(current_red_led_count)
 
     bb = BlinkyTape('/dev/ttyACM0')
 
     logging.info('Starting thread')
     while True:
         c.acquire()
-        if (current_red_led_count != red_led_count):
-            current_red_led_count = red_led_count
-            logging.info('Change to number of red lights: %s', current_red_led_count)
+        new_led_count = red_led_count
         c.notify_all()
         c.release()
         # do stuff
-        leds = getLedColourList(current_red_led_count)
+        if (current_red_led_count != new_led_count):
+            current_red_led_count = red_led_count
+            logging.info('Change to number of red lights: %s', current_red_led_count)
+            leds = getLedColourList(current_red_led_count)
+        else:
+            animate(leds)
+        logging.info(leds)
         bb.send_list(leds)
         time.sleep(0.5)
+
+def animate(leds):
+    rotate(leds,1)
+
+def rotate(lst,x):
+    copy = list(lst)
+    for i in range(len(lst)):
+        if x<0:
+            lst[i+x] = copy[i]
+        else:
+            lst[i] = copy[i-x]
 
 w = threading.Thread(name='worker', target=worker)
 d = threading.Thread(name='display', target=display)
