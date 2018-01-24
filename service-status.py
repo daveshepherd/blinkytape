@@ -76,8 +76,13 @@ def getLedColourList(red_led_count):
     for i in range(red_led_count):
         leds.append([255,0,0])
         x = x + 1
+    tail_length = 5
     for i in range(x,60):
-        leds.append([0,0,0])
+        if (red_led_count > 0 and i < x + tail_length):
+            shade_of_red = int(math.ceil(255 / (i - x  + 4)))
+            leds.append([shade_of_red,0,0])
+        else:
+            leds.append([0,0,0])
     return leds
 
 def worker():
@@ -116,12 +121,12 @@ def display():
             leds = getLedColourList(current_red_led_count)
         else:
             animate(leds)
-        logging.info(leds)
+        logging.debug(leds)
         bb.send_list(leds)
-        time.sleep(0.5)
+        time.sleep(0.2)
 
 def animate(leds):
-    rotate(leds,1)
+    rotate(leds,-1)
 
 def rotate(lst,x):
     copy = list(lst)
