@@ -80,7 +80,7 @@ def getLedColourList(red_led_count):
     for i in range(x,60):
         if (red_led_count > 0 and i < x + tail_length):
             tail_count = i-x+1
-            shade_of_red = int(math.ceil((tail_length - tail_count + 1) * 255 / (tail_length + 1)))
+            shade_of_red = int(math.ceil((tail_length - tail_count + 1) * 64 / (tail_length + 1)))
             leds.append([shade_of_red,0,0])
         else:
             leds.append([0,0,0])
@@ -124,7 +124,7 @@ def display():
             animate(leds)
         logging.debug(leds)
         bb.send_list(leds)
-        time.sleep(0.2)
+        time.sleep(0.1)
 
 def animate(leds):
     rotate(leds,-1)
