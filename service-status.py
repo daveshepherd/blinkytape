@@ -79,7 +79,8 @@ def getLedColourList(red_led_count):
     tail_length = 5
     for i in range(x,60):
         if (red_led_count > 0 and i < x + tail_length):
-            shade_of_red = int(math.ceil(255 / (i - x  + 4)))
+            tail_count = i-x+1
+            shade_of_red = int(math.ceil((tail_length - tail_count + 1) * 255 / (tail_length + 1)))
             leds.append([shade_of_red,0,0])
         else:
             leds.append([0,0,0])
