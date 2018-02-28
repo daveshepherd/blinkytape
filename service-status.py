@@ -83,7 +83,7 @@ def getLedColourList(red_led_count):
             shade_of_red = int(math.ceil((tail_length - tail_count + 1) * 64 / (tail_length + 1)))
             leds.append([shade_of_red,0,0])
         else:
-            leds.append([0,0,0])
+            leds.append([0,25,0])
     return leds
 
 def worker():
