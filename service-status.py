@@ -11,11 +11,12 @@ import traceback
 
 logging.basicConfig(level=logging.INFO,format='(%(threadName)-10s) %(levelname)-8s %(message)s',)
 
+TEST = False
 FAILURE = 1
 SUCCESS = 2
 
 c = threading.Condition()
-red_led_count = 0
+statuses = { "initial": SUCCESS }
 
 def queryService(url):
     r = requests.get(url, allow_redirects=False)
@@ -31,7 +32,7 @@ def queryService(url):
             return FAILURE
 
 def getUrlsForService(service):
-    urls = []
+    defaultUrlStatuses = {}
 
     healthUrl = None
     for link in service['links']:
@@ -47,25 +48,24 @@ def getUrlsForService(service):
 
     for environment in service['environments']:
         if 'baseUrl' in environment:
-            urls.append(environment['baseUrl'] + healthUrl)
-    return urls
+            defaultUrlStatuses[environment['baseUrl'] + healthUrl] = SUCCESS
+    return defaultUrlStatuses
 
-def getStatus():
-    r = requests.get('https://apps.wealthwizards.io/service-registry/v1/service')
-
-    urls = []
+def getDefaultStatuses():
+    r = requests.get('https://apps.wealthwizards.io/service-registry/v1/service?tags=lv')
+    urlStatuses = {}
     for service in r.json():
-        urls = urls + getUrlsForService(service)
+        urlStatuses.update(getUrlsForService(service))
+    return urlStatuses
 
-    responses = []
-    for url in urls:
-		responses.append(queryService(url))
-
-    return responses
+def getStatuses(urlStatuses):
+    for key in urlStatuses:
+		urlStatuses[key] = queryService(key)
+    return urlStatuses
 
 def calculateRedLeds(statuses):
-    failureCount = statuses.count(FAILURE)
-    successCount = statuses.count(SUCCESS)
+    failureCount = sum(1 for x in statuses.values() if x == FAILURE)
+    successCount = sum(1 for x in statuses.values() if x == SUCCESS)
     red_ratio = failureCount/(failureCount + successCount)
     red_leds = int(math.ceil(red_ratio * 60))
     return red_leds
@@ -87,43 +87,48 @@ def getLedColourList(red_led_count):
     return leds
 
 def worker():
-    global red_led_count
+    global statuses
     logging.info('Starting thread')
     while True:
         logging.info('Starting to query services')
         try:
-            statuses = getStatus()
-            c.acquire()
-            red_led_count = calculateRedLeds(statuses)
-            logging.info('Number of red lights: %s', red_led_count)
-            c.notify_all()
-            c.release()
+            defaultStatuses = getDefaultStatuses()
+
+            outOfDateUrls = list(set(statuses.keys()) - set(defaultStatuses.keys()))
+            for key in outOfDateUrls:
+                del statuses[key]
+
+            newUrls = list(set(defaultStatuses.keys()) - set(statuses.keys()))
+            for key in newUrls:
+                statuses[key] = defaultStatuses[key]
+
+            getStatuses(statuses)
         except:
             traceback.print_exc()
         logging.info('Finished querying services')
 
 def display():
-    global red_led_count
     current_red_led_count=0
     leds = getLedColourList(current_red_led_count)
 
-    bb = BlinkyTape('/dev/ttyACM0')
+    if not TEST:
+        bb = BlinkyTape('/dev/ttyACM0')
 
     logging.info('Starting thread')
     while True:
-        c.acquire()
-        new_led_count = red_led_count
-        c.notify_all()
-        c.release()
+        red_led_count = calculateRedLeds(statuses)
+
         # do stuff
-        if (current_red_led_count != new_led_count):
+        if (current_red_led_count != red_led_count):
             current_red_led_count = red_led_count
             logging.info('Change to number of red lights: %s', current_red_led_count)
+            logging.info('statuses: %s', statuses)
             leds = getLedColourList(current_red_led_count)
         else:
             animate(leds)
         logging.debug(leds)
-        bb.send_list(leds)
+        if not TEST:
+            bb.send_list(leds)
         time.sleep(0.1)
 
 def animate(leds):
