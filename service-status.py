@@ -122,7 +122,7 @@ def display():
         if (current_red_led_count != red_led_count):
             current_red_led_count = red_led_count
             logging.info('Change to number of red lights: %s', current_red_led_count)
-            logging.info('statuses: %s', statuses)
+            logging.debug('statuses: %s', statuses)
             leds = getLedColourList(current_red_led_count)
         else:
             animate(leds)
