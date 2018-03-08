@@ -87,7 +87,6 @@ def getLedColourList(red_led_count):
     return leds
 
 def worker():
-    global statuses
     logging.info('Starting thread')
     while True:
         logging.info('Starting to query services')
@@ -126,7 +125,6 @@ def display():
             leds = getLedColourList(current_red_led_count)
         else:
             animate(leds)
-        logging.debug(leds)
         if not TEST:
             bb.send_list(leds)
         time.sleep(0.1)
@@ -142,9 +140,9 @@ def rotate(lst,x):
         else:
             lst[i] = copy[i-x]
 
-w = threading.Thread(name='worker', target=worker)
 d = threading.Thread(name='display', target=display)
+d.daemon = True
 logging.debug('Starting threads')
-w.start()
 d.start()
+worker()
 logging.debug('Threads started')
