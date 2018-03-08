@@ -74,9 +74,11 @@ def getStatuses(urlStatuses):
     queue = Queue()
     num_procs = 0
     procs = []
-    for subset in chunks(urlStatuses, 30):
+    chunk_size = int(math.ceil(len(urlStatuses.keys())/5))
+    for subset in chunks(urlStatuses, chunk_size):
         procs.append(Process(target=slave, args=(queue, subset, )))
         num_procs += 1
+    logging.info('Starting %s threads to query %s services', num_procs, len(urlStatuses.keys()))
     for proc in procs:
         proc.start()
 
