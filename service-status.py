@@ -52,7 +52,7 @@ def getUrlsForService(service):
     return defaultUrlStatuses
 
 def getDefaultStatuses():
-    r = requests.get('https://apps.wealthwizards.io/service-registry/v1/service?tags=lv')
+    r = requests.get('https://apps.wealthwizards.io/service-registry/v1/service')
     urlStatuses = {}
     for service in r.json():
         urlStatuses.update(getUrlsForService(service))
