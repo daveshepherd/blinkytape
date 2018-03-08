@@ -9,6 +9,7 @@ import threading
 import time
 import traceback
 from multiprocessing import Process, Queue
+from itertools import islice
 
 logging.basicConfig(level=logging.INFO,format='(%(threadName)-10s) %(levelname)-8s %(message)s',)
 
@@ -59,16 +60,22 @@ def getDefaultStatuses():
         urlStatuses.update(getUrlsForService(service))
     return urlStatuses
 
-def slave(queue, url):
-    queue.put([url, queryService(url)])
+def slave(queue, urls):
+    for url in urls:
+        queue.put([url, queryService(url)])
     queue.put(None) # add a sentinel value to tell the master we're done
+
+def chunks(data, SIZE=30):
+    it = iter(data)
+    for i in xrange(0, len(data), SIZE):
+        yield {k:data[k] for k in islice(it, SIZE)}
 
 def getStatuses(urlStatuses):
     queue = Queue()
     num_procs = 0
     procs = []
-    for key in urlStatuses:
-        procs.append(Process(target=slave, args=(queue, key, )))
+    for subset in chunks(urlStatuses, 30):
+        procs.append(Process(target=slave, args=(queue, subset, )))
         num_procs += 1
     for proc in procs:
         proc.start()
