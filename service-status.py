@@ -8,6 +8,7 @@ import requests
 import threading
 import time
 import traceback
+from multiprocessing import Process, Queue
 
 logging.basicConfig(level=logging.INFO,format='(%(threadName)-10s) %(levelname)-8s %(message)s',)
 
@@ -58,9 +59,31 @@ def getDefaultStatuses():
         urlStatuses.update(getUrlsForService(service))
     return urlStatuses
 
+def slave(queue, url):
+    queue.put([url, queryService(url)])
+    queue.put(None) # add a sentinel value to tell the master we're done
+
 def getStatuses(urlStatuses):
+    queue = Queue()
+    num_procs = 0
+    procs = []
     for key in urlStatuses:
-		urlStatuses[key] = queryService(key)
+        procs.append(Process(target=slave, args=(queue, key, )))
+        num_procs += 1
+    for proc in procs:
+        proc.start()
+
+    finished = 0
+    while finished < num_procs:
+        item = queue.get()
+        if item is None:
+            finished += 1
+        else:
+            urlStatuses[item[0]] = item[1]
+
+    for proc in procs:
+        proc.join()
+
     return urlStatuses
 
 def calculateRedLeds(statuses):
@@ -105,6 +128,7 @@ def worker():
         except:
             traceback.print_exc()
         logging.info('Finished querying services')
+        time.sleep(120)
 
 def display():
     current_red_led_count=0
@@ -145,4 +169,3 @@ d.daemon = True
 logging.debug('Starting threads')
 d.start()
 worker()
-logging.debug('Threads started')
